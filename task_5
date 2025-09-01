@@ -1,0 +1,16 @@
+WITH cte_operation AS (
+	SELECT account, t.operation_datetime::DATE, t.operation_sum, tr.operation_sum, tr.operation_datetime::DATE,
+		CASE
+			WHEN (t.operation_sum - tr.operation_sum) = 0
+				OR (t.operation_sum - tr.operation_sum) < 0
+			THEN SUM(t.operation_sum - tr.operation_sum) OVER(PARTITION BY account ORDER BY tr.operation_datetime::DATE RANGE BETWEEN CURRENT ROW AND '10 days' FOLLOWING)
+		END AS operation
+	FROM transactions t
+	JOIN tranches tr
+	USING(account)
+	WHERE tr.operation_datetime::DATE BETWEEN '01-01-2024' AND '31-12-2024'			
+)
+SELECT account, SUM(operation) AS operation
+FROM cte_operation
+WHERE operation IS NOT NULL
+GROUP BY account;
