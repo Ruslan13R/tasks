@@ -1,0 +1,40 @@
+-- Оптимизация SQL кода
+-- Код, который нужно оптимизировать
+-- При больших объемах данных, также можно использовать индексацию, в текущих примерах, она только ухудшала результат
+
+EXPLAIN ANALYZE
+SELECT c.client_id, c.name, c.age,
+	(SELECT count(*)
+	FROM accounts a WHERE a.client_id = c.client_id) AS total_accounts, 
+	(SELECT sum(a.balance)
+	FROM accounts a WHERE a.client_id = c.client_id) AS total_balance,
+	(SELECT count(*)
+	FROM transactions t	JOIN accounts a ON t.account_id = a.account_id
+	WHERE a.client_id = c.client_id	AND t.transaction_type = 'deposit') AS total_deposits,
+	(SELECT count(*)
+	FROM transactions t	JOIN accounts a ON t.account_id = a.account_id
+	WHERE a.client_id = c.client_id AND t.transaction_type = 'withdrawal') AS total_withdrawals
+FROM clients c
+WHERE c.registration_date >= '2020-01-01'
+ORDER BY total_balance DESC;
+
+-- Execution Time: 1.824 ms
+
+
+-- Итоговый код по оптимизации
+EXPLAIN ANALYZE
+WITH cte_value AS (
+	SELECT c.client_id, c.name, c.age, count(DISTINCT a.account_id) AS total_accounts, sum(DISTINCT a.balance) AS total_balance, 
+		   COUNT(*) FILTER (WHERE t.transaction_type = 'deposit') AS total_deposits,
+		   COUNT(*) FILTER (WHERE t.transaction_type = 'withdrawal') AS total_withdrawals
+	FROM accounts a 
+	JOIN clients c USING(client_id)
+	LEFT JOIN transactions t USING(account_id)
+	WHERE c.registration_date >= '2020-01-01'
+	GROUP BY  c.client_id, c.name, c.age
+)
+SELECT cv.client_id, cv.name, cv.age, total_accounts, total_balance, total_deposits, total_withdrawals
+FROM cte_value cv
+ORDER BY total_balance DESC;
+
+--Execution Time: 0.323 ms
