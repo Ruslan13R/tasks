@@ -1,0 +1,12 @@
+SELECT username, role, COUNT(name) count_of_activity
+FROM user_roles ur
+JOIN user_activity u 
+	ON ur.user_id = u.user_id
+JOIN activity_types act
+	ON act.id = u.activity_type_id
+JOIN users us
+	ON us.id = u.user_id
+WHERE EXTRACT('month' FROM  u.activity_date) = (SELECT EXTRACT('month' FROM  MAX(activity_date)) FROM user_activity) AND
+		EXTRACT('year' FROM  u.activity_date) = (SELECT EXTRACT('year' FROM  MAX(activity_date)) FROM user_activity)
+GROUP BY username, role
+ORDER BY count_of_activity DESC;
