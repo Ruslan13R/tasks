@@ -1,0 +1,21 @@
+from sqlalchemy import create_engine, Column, Integer, String, Boolean
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from fastapi import FastAPI
+
+sql_db_url = 'sqlite:///./name_db.db'
+engine = create_engine(sql_db_url, connect_args={'check_same_thread': False})
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+class Tasks(Base):
+    __tablename__ = 'tasks'
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    completed = Column(Boolean, default=False)
+
+
+SessionLocal = sessionmaker(autoflush=False, bind=engine)
