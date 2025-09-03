@@ -1,0 +1,50 @@
+from math import floor
+
+
+def set_segments(L_value, k, segment=None):
+    if segment is None:
+        segment = []
+
+    low, high = min(L_value), max(L_value)
+
+    while sum(segment) != k :
+        segment = []
+        mid = (low + high) // 2
+
+        for v in L_value:
+            segment.append(floor(v / mid))
+
+        if sum(segment) > k:
+            low = mid + 1
+
+        elif sum(segment) < k:
+            high = mid - 1
+
+        if low > high:
+            break
+
+    return segment
+
+
+def get_new_L(L, k):
+    segments = set_segments(L, k)
+    
+    if segments == []:
+        return  None
+    
+    new_L = []
+
+    for i, v in enumerate(segments):
+        tmp = v+1
+        while v >= 0:
+            new_L.append(L[i] // tmp)
+            v -= 1
+
+    return new_L
+
+
+n = 5
+k = 4
+L = [100, 180, 50, 45, 150]
+
+print(f'Начальный список: {L}', f'Финальный список: {get_new_L(L, k)}', sep='\n')
